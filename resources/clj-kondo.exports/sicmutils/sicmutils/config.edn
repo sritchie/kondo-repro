@@ -1,0 +1,6 @@
+{:linters
+ {:sicmutils.pattern/number {:level :error}}
+
+ :hooks
+ {:analyze-call
+  {pattern.rule/cake hooks.pattern.rule/cake}}}
