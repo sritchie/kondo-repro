@@ -1,3 +1,2 @@
-{:config-paths ["../resources/clj-kondo.exports/sicmutils/sicmutils"]
- :linters
- {:sicmutils.pattern/number {:level :warning}}}
+{:config-paths ["babashka/sci"
+                "sicmutils/sicmutils"]}

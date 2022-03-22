@@ -1,12 +1,6 @@
 # Kondo Repro
 
-The bug seems to be that
-
-```
-#_{:clj-kondo/ignore [:sicmutils.pattern/number]}
-```
-
-Does not work.
+The problem is that anything defined in `sicmutils.env` with `import-def` is not recognized by the linter, but only in a project using `sicmutils` as a dependency, not the actual codebase.
 
 Version:
 
@@ -15,37 +9,23 @@ $ clj-kondo --version
 clj-kondo v2022.03.04
 ```
 
-`src/pattern/rule.cljc` contains:
-
-```clj
-(ns pattern.rule)
-
-(defmacro cake [x sym]
-  `(def ~sym ~x))
-
-#_{:clj-kondo/ignore [:sicmutils.pattern/number]}
-(cake "string" binder)
-```
-
-With `.clj-kondo/config.edn`:
-
-```clj
-{:config-paths ["../resources/clj-kondo.exports/sicmutils/sicmutils"]
- ;; this override DOES work. I had been nesting this kv pair inside some other
- ;; map, whoops....
- :linters
- {:sicmutils.pattern/number {:level :warning}}}
-```
-
 Try
 
 ```
-clj-kondo --lint src/pattern/rule.cljc
+$ clj-kondo --lint src/example.clj
+src/example.clj:7:36: warning: Unresolved var: principal-value
 ```
 
-And note the result:
+That function is defined using `import-def`:
+https://github.com/sicmutils/sicmutils/blob/main/src/sicmutils/env.cljc#L195
 
-```sh
-$ clj-kondo --lint src/pattern/rule.cljc
-src/pattern/rule.cljc:7:7: error: binding value must be a number!
+Which DOES have a hook: https://github.com/sicmutils/sicmutils/blob/main/resources/clj-kondo.exports/sicmutils/sicmutils/hooks/sicmutils/util/def.clj#L4-L14
+
+that is definitely getting called when I lint dependencies:
+
 ```
+clj-kondo --lint "$(clojure -Spath)"
+```
+
+I put a `prn` statement before `{:node new-node}` in the imported hook and it
+definitely triggers.
